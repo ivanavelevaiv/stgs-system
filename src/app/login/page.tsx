@@ -26,6 +26,13 @@ const DEMO_USERS = {
     label: "Демо најава (Деканат)",
     sublabel: "Декан · Александар Ристески",
   },
+  accountant: {
+    email: "demo.accountant@finki.ukim.edu.mk",
+    password: "Demo@Finki2026",
+    redirect: "/accounting",
+    label: "Демо најава (Сметководство)",
+    sublabel: "Сметководител · Снежана Јованова",
+  },
 } as const;
 
 export default function LoginPage() {
@@ -141,7 +148,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {(["applicant", "council", "deanery"] as const).map((key) => {
+          {(["applicant", "council", "deanery", "accountant"] as const).map((key) => {
             const user = DEMO_USERS[key];
             const isThis = demoLoading === key;
             return (

@@ -166,7 +166,7 @@ export default function AdvanceActions({
         </div>
         <p className="text-xs text-muted-foreground">
           Кликнете за да издадете налог за аванс. Апликацијата ќе премине во
-          статус „За исплата".
+          статус &#8222;За исплата&#8221;.
         </p>
         {error && (
           <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
