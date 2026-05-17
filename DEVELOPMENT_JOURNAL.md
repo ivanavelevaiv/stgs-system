@@ -248,3 +248,46 @@ GoTrue scans token columns into Go `string` (not `*string`). Raw INSERT left `co
 - `src/components/accounting/advance-actions.tsx` (updated)
 
 ---
+
+### Task: Phase 4 — UC-04 Expense Report & OCR workflow
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Build UC-04 Expense Report: form for paid applications, drag-and-drop receipt upload (PDF/JPG/PNG), OCR simulation with per-field confidence, SHA-256 duplicate detection, manual override UI, scikit-learn-equivalent TypeScript validation. Update ROADMAP and DEVELOPMENT_JOURNAL.
+
+**Implementation:**
+
+**Architecture:**
+- Client-side SHA-256 hash via `crypto.subtle.digest` — computed before upload; checked against all hashes in the current session; sets `is_duplicate_suspect = true` on match
+- `process-ocr` simulated as Next.js API route `/api/ocr-simulate`: deterministic seeded RNG on `storagePath+fileName` → plausible amount/currency/date/category + per-field confidence scores (varies with file size); mirrors real edge function contract
+- `src/lib/ocr-validation.ts` — TypeScript cross-field validator (equivalent of scikit-learn pipeline): validates amount > 0 and ≤ 2× approved amount, date within ±1/+2 days of travel window, currency in known list; returns per-field warning map
+- Duplicate detection stores `content_hash` in `receipts` row; `is_duplicate_suspect` shown as orange warning banner in receipt card
+
+**Components:**
+- `receipt-uploader.tsx`: drag-and-drop zone + file input fallback; per-file flow: validate → hash → upload to `receipts` bucket → OCR → validate fields → emit fully hydrated `ReceiptData`; graceful error states per file
+- `receipt-card.tsx`: shows OCR confidence bars per field (green ≥85%, yellow ≥65%, red <65%); editable inputs for amount/currency/date/category; duplicate warning; sets `isManuallyOverridden=true` on any field edit
+- `expense-report-form.tsx`: orchestrates state for all receipts; deadline countdown banner (red if ≤2 days); running total with diff vs approved amount; proof of attendance upload; on submit: inserts `expense_reports` + all `receipts` rows + sets application status → `report_submitted`
+
+**Page:**
+- `/applicant/applications/[id]/report/new` — server component; auth + role check; must be `paid`; shows read-only summary if already submitted (`report_submitted`/`in_settlement`/`closed`)
+- `/applicant` dashboard — "Поднеси извештај →" button appears only for `paid` applications
+
+**ROADMAP updates:**
+- Phase 3 marked ✅ COMPLETE (with one minor item deferred: Deanery budget overview widget → Phase 6)
+- Phase 4 marked 🔄 IN PROGRESS with all implemented items checked
+
+**Build result:** `npx next build` — 11 routes, 0 TS errors, 0 lint errors
+
+**Files changed:**
+- `src/lib/ocr-validation.ts` (created)
+- `src/app/api/ocr-simulate/route.ts` (created)
+- `src/components/expense-report/receipt-card.tsx` (created)
+- `src/components/expense-report/receipt-uploader.tsx` (created)
+- `src/components/expense-report/expense-report-form.tsx` (created)
+- `src/app/(dashboard)/applicant/applications/[id]/report/new/page.tsx` (created)
+- `src/app/(dashboard)/applicant/page.tsx` (updated — report link for paid apps)
+- `ROADMAP.md` (updated — Phase 3 ✅, Phase 4 🔄)
+
+---
+
+---

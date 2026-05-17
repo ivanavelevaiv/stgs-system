@@ -422,30 +422,32 @@ Append-only: no UPDATE/DELETE permissions granted on this table to any role.
 
 ---
 
-### Phase 3 — Advance Payment (Week 7)
+### Phase 3 — Advance Payment (Week 7) ✅ COMPLETE
 **Goal:** Accounting processes advance payment. (UC-03)
 
-- [ ] Accounting dashboard: list of applications in 'approved' status
-- [ ] "Issue advance" action: enters payment_reference + date; status → for_payment
-- [ ] "Confirm payment" action: status → paid; applicant notified (R-07)
-- [ ] Digital signature by Accounting on confirmation
+- [x] Accounting dashboard: list of applications grouped by status (approved / for_payment / paid)
+- [x] "Issue advance" action: creates advances row, status → for_payment
+- [x] "Confirm payment" action: enters payment_reference + date, status → paid; mock MAdNS R-07
+- [x] Digital signature simulation by Accounting on confirmation
 - [ ] Budget overview widget (Deanery): allocated vs. paid vs. remaining per department/year (R-06)
 
 **Deliverable:** Payment status lifecycle complete; applicant sees real-time status updates.
 
 ---
 
-### Phase 4 — Expense Report & OCR (Week 8–9)
+### Phase 4 — Expense Report & OCR (Week 8–9) 🔄 IN PROGRESS
 **Goal:** Applicant submits final report; receipts are OCR-processed. (UC-04)
 
-- [ ] Expense report form (available only after status = paid)
-- [ ] Receipt upload: individual file upload per receipt; category + manual amount entry fallback
-- [ ] Edge Function `process-ocr`: extract amount / date / type from uploaded receipt
-- [ ] Edge Function `check-duplicate-receipt`: SHA-256 hash; flag duplicates (R-10)
-- [ ] OCR result display: show extracted values with confidence; allow manual correction
-- [ ] Proof of attendance upload
-- [ ] Status transition: paid → report_submitted → in_settlement
-- [ ] Trigger: `auto_create_settlement` with initial calculation
+- [x] Expense report form (available only after status = paid) — `/applicant/applications/[id]/report/new`
+- [x] Receipt upload: drag-and-drop, PDF/JPG/PNG, 10 MB limit, category + manual amount entry
+- [x] `process-ocr` simulation: `/api/ocr-simulate` returns amount/currency/date/category + per-field confidence
+- [x] SHA-256 content hash duplicate detection: client-side via `crypto.subtle.digest`; `is_duplicate_suspect` flag
+- [x] OCR confidence breakdown UI: per-field bars (green/yellow/red), overall score, manual override
+- [x] `src/lib/ocr-validation.ts`: cross-field validation (amount range, date in travel window, known currency)
+- [x] Proof of attendance upload (`proof-of-attendance` bucket)
+- [x] Status transition: paid → report_submitted on submit
+- [ ] Status transition: report_submitted → in_settlement (Phase 5 trigger)
+- [ ] Trigger: `auto_create_settlement` with initial calculation (Phase 5)
 
 **Deliverable:** Applicant can submit receipts; OCR extracts data automatically with manual override.
 

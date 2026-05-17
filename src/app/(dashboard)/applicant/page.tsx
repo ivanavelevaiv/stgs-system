@@ -89,6 +89,16 @@ export default async function ApplicantDashboard() {
               >
                 {STATUS_LABELS[app.status as ApplicationStatus] ?? app.status}
               </span>
+
+              {app.status === "paid" && (
+                <Link
+                  href={`/applicant/applications/${app.id}/report/new`}
+                  className="shrink-0 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:bg-primary/90 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Поднеси извештај →
+                </Link>
+              )}
             </div>
           ))}
         </div>
