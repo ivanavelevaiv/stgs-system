@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Content *)",
+      "Bash(mkdir -p ~/.ssh)",
+      "Bash(ssh-keyscan github.com)",
+      "Read(//c/Users/Administrator/.ssh/**)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "$j='C:\\Users\\Administrator\\Documents\\stgs-system\\DEVELOPMENT_JOURNAL.md'; if(!(Test-Path $j)){exit 0}; if(((Get-Date)-(Get-Item $j).LastWriteTime).TotalMinutes -gt 10){Write-Output '{\"continue\":false,\"stopReason\":\"Please update DEVELOPMENT_JOURNAL.md before stopping — last entry is more than 10 minutes old.\"}'}",
+            "timeout": 10,
+            "statusMessage": "Checking development journal..."
+          }
+        ]
+      }
+    ]
+  }
+}
