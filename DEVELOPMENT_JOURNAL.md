@@ -4,6 +4,159 @@
 
 ## 2026-05-17
 
+### Task: Session Wrap-up — TypeScript Verification
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Update DEVELOPMENT_JOURNAL.md to document the successful completion of the full-fluid widescreen layout upgrades, the premium Tailwind UI refinements across all portal views, and verify that the TypeScript compiler passes with 0 errors. Then wrap up the session.
+
+**Implementation:**
+- Ran `npx tsc --noEmit` — exited with code 0, no output, **0 TypeScript errors**
+- All premium UI sessions confirmed clean:
+  - `src/app/globals.css` — `@keyframes shimmer` foundation used by all animated pages
+  - `src/app/(dashboard)/applicant/page.tsx` — asymmetric bento grid, `STATUS_ACCENT` map, animated ping pulse
+  - `src/app/(dashboard)/budget/page.tsx` — navy hero, 3 gradient stat cards, utilisation gauge, asymmetric 2+1 bento, `PipelineTile` components
+  - `src/app/(dashboard)/accounting/page.tsx` — flex-row queue sections, `AppSection` component, ping dots, scale-press buttons
+  - `src/components/accounting/settlement-view.tsx` — gradient-border duplicate alert, ledger calculator, `DIRECTION_META` map, scale-press CTAs
+  - `src/components/accounting/advance-actions.tsx` — state machine fix + premium gradient cards
+  - `src/app/(dashboard)/layout.tsx` — `w-full` on wrapper and `<main>`
+  - `src/app/login/page.tsx` — split-screen with dark brand panel, 2×3 demo card grid
+
+**Files changed:**
+- None (verification only)
+
+---
+
+### Task: AdvanceActions State Machine Bug Fix
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Inspect AdvanceActions and ensure the payout confirmation flow is fully working. Verify the "Потврди исплата" action is visible when application status is "for_payment" or "approved". Ensure the onClick handler properly updates status to "paid" in Supabase. Double-check TypeScript and lint pass.
+
+**Implementation:**
+- Identified three `(applicationStatus, existingAdvance)` combinations that fell through all three `if` branches to `return null`, rendering a completely blank widget:
+  1. `approved` + advance exists but `status = "issued"` — partial write failure where advance INSERT succeeded but app status update to `for_payment` did not
+  2. `for_payment` + no advance record — advance INSERT failed but app status update succeeded
+  3. `paid` + advance `status` still `"issued"` — advance status update failed after app was marked paid
+- **State C fix**: changed condition from `applicationStatus === "paid" && existingAdvance?.status === "paid"` → `existingAdvance?.status === "paid"` — keyed on advance record only, tolerates app status lag
+- **State A fix**: added `applicationStatus === "for_payment"` to the `!existingAdvance` branch — recovery path for case 2
+- **State B fix**: changed from `existingAdvance && applicationStatus === "for_payment"` → `existingAdvance` — covers all remaining non-null advance cases including case 1 partial-failure recovery
+- No changes to handlers, TypeScript types, or UI code — surgical condition-only fix
+- `npx tsc --noEmit` confirmed 0 errors after change
+
+**Files changed:**
+- `src/components/accounting/advance-actions.tsx` (3 `if` condition lines modified)
+
+---
+
+### Task: Premium Login Page — Split-Screen Redesign
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Redesign login/page.tsx as a world-class split-screen layout: dark gradient left panel with organic glow, shimmer, and feature bullets; clean right panel with 2×3 grid of demo account cards.
+
+**Implementation:**
+- Replaced single centered card with `h-screen flex overflow-hidden` split-screen layout
+- **Left panel (`hidden lg:flex lg:w-[45%]`)** — `from-slate-900 via-indigo-950 to-slate-950` gradient:
+  - 3 organic glow blobs (blurred rounded-full circles in indigo/violet/blue at low opacity)
+  - 28 px dot-grid texture overlay via inline `backgroundImage` radial-gradient at 4.5% opacity
+  - Panel-wide shimmer sweep (`animate-[shimmer_9s_...]`) at 4% via opacity
+  - 168 px `STGS` watermark in bottom-right corner at 4% opacity
+  - ФИНКИ/УКИМ frosted badge (inline-flex with `bg-white/10 border border-white/15`)
+  - Title block with its own inner shimmer (`animate-[shimmer_4.5s_1.5s_infinite]`) at 13% via opacity; "научни патувања" in `text-indigo-300`
+  - 4 feature bullet points with `bg-indigo-500/20 border border-indigo-500/40` dot indicators
+  - University credits at bottom in `text-white/28`
+- **Right panel (`flex-1`)** — clean `bg-background` with `max-w-lg` content container:
+  - Mobile-only STGS header (`lg:hidden`)
+  - `rounded-xl` form inputs with `focus:ring-primary/30 transition-shadow`; submit button with spinner + scale press
+  - Divider: `text-[10px] tracking-[0.2em]` label "ПРИСТАП ЗА ПРЕЗЕНТАЦИЈА"
+  - **2×3 grid of demo cards** — each `rounded-xl border-2 border-border/70 bg-muted/20` with:
+    - Colored role dot + `text-[9px] tracking-[0.18em]` role label (`ROLE_DOT`, `ROLE_TEXT`, `ROLE_SHORT` maps)
+    - Name (parsed from `sublabel` via `· ` split) as `text-sm font-bold group-hover:text-primary`
+    - Title/description as `text-xs text-muted-foreground`
+    - `hover:border-primary/40 hover:shadow-md active:scale-[0.97]` transitions
+    - Backdrop-blur loading overlay per-card when that demo is loading
+- All 6 `handleDemoLogin` hooks and form state (`email`, `password`, `loading`, `demoLoading`, `error`) preserved unchanged
+
+**Files changed:**
+- `src/app/login/page.tsx` (rewritten)
+
+---
+
+### Task: Full-fluid Layout — Remove max-w Constraints
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Make the app fully fluid and full-width. Update the dashboard layout wrapper, strip max-w constraints from applicant, budget, accounting, hr, archive, and review pages.
+
+**Implementation:**
+- `src/app/(dashboard)/layout.tsx`: added `w-full` to the outer wrapper div and to `<main>` (`flex-1 overflow-auto w-full`)
+- Stripped `max-w-5xl` (and `mx-auto` where present) from the root `<div>` of 6 pages, replacing with `w-full`:
+  - `applicant/page.tsx`, `budget/page.tsx`, `accounting/page.tsx`, `hr/page.tsx`, `archive/page.tsx`, `review/page.tsx`
+- Intentionally left `max-w-*` intact on detail/form pages (`review/[id]`, `accounting/[id]`, `accounting/settlement/[id]`, `applicant/.../report/new`, `notifications`) — narrow columns aid readability for single-record forms
+
+**Files changed:**
+- `src/app/(dashboard)/layout.tsx` (modified)
+- `src/app/(dashboard)/applicant/page.tsx` (modified)
+- `src/app/(dashboard)/budget/page.tsx` (modified)
+- `src/app/(dashboard)/accounting/page.tsx` (modified)
+- `src/app/(dashboard)/hr/page.tsx` (modified)
+- `src/app/(dashboard)/archive/page.tsx` (modified)
+- `src/app/(dashboard)/review/page.tsx` (modified)
+
+---
+
+### Task: Premium UI — Accounting Queue, Settlement View, Advance Actions
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Upgrade accounting/page.tsx and the settlement view to a high-end ticketing system with gradient borders, scale-press buttons, premium ledger rows, and a sleek duplicate-suspect alert banner.
+
+**Implementation:**
+- **`src/app/(dashboard)/accounting/page.tsx`** — full redesign:
+  - Hero header: deep teal/emerald-950 gradient (distinct palette from budget/applicant pages)
+  - Queue-count pills: compact color-coded chips (amber/blue/emerald/violet) shown above queue sections
+  - `AppSection` component extracted from inner function — accepts `accentBorder`, `dotColor`, `chipCls` per section; renders `rounded-2xl` card with `divide-y` rows and animated ping dot on section headings
+  - Each application row: flex layout (replaces `<table>`), `border-l-4` accent keyed to section color, `group` hover with primary color transition on conference name, scale-press "Обработи →" button
+  - Empty state: dashed-border card with emoji + description
+- **`src/components/accounting/settlement-view.tsx`** — premium redesign:
+  - **Duplicate suspect banner**: 1 px gradient border wrapper (`p-[1px] rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-red-400`) with inner `bg-card rounded-[15px]`; warning emoji icon, unresolved count badge, per-receipt rows with amber/emerald tinted backgrounds; "Потврди" button with scale-press
+  - **Settlement calculator**: ledger rows inside `rounded-xl overflow-hidden border` block; advance/receipts/excluded rows with semantic bg tints; difference row with large bold number colored per direction (emerald/orange/blue); direction summary card; confirm buttons with `hover:scale-[1.02] active:scale-[0.98] shadow-md`
+  - All receipts: `rounded-2xl` card with header bar and hover rows, replacing plain `<ul>`
+- **`src/components/accounting/advance-actions.tsx`** — premium redesign:
+  - State A (issue advance): blue-indigo gradient mini card displaying the MKD amount (4xl font + shimmer); `rounded-2xl` wrapper; scale-press CTA
+  - State B (confirm payment): `rounded-xl` form inputs with `focus:ring-primary/30` shadow, scale-press confirm button; amount displayed prominently in header
+  - State C (paid): emerald gradient success card with shimmer — matches applicant paid-state aesthetic
+
+**Files changed:**
+- `src/app/(dashboard)/accounting/page.tsx` (rewritten)
+- `src/components/accounting/settlement-view.tsx` (rewritten)
+- `src/components/accounting/advance-actions.tsx` (rewritten)
+
+---
+
+### Task: Premium Bento Grid — Deanery Budget Dashboard UI Upgrade
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Upgrade the Deanery Budget Report (`/budget`) with gradient stat cards, shimmer animations, bento grid, color-coded progress bars, and premium hover effects. Do not change any data-fetching logic.
+
+**Implementation:**
+- Rewrote `src/app/(dashboard)/budget/page.tsx` JSX (all data fetching and business logic preserved):
+  - **Hero header**: deep navy gradient (`indigo-950 → blue-950 → slate-900`), shimmer sweep + decorative translucent circles — distinct palette from the applicant dashboard to give each page its own identity
+  - **3 equal-width gradient stat cards**: slate (total budget), amber-orange (allocated, shimmer delayed 0.8 s), emerald/red (remaining — flips to red gradient with shadow when `remaining < 0`; delays 1.6 s for staggered shimmer)
+  - **Overall utilisation gauge**: large percentage readout (text-4xl, color-keyed to utilisation: blue < 60%, amber 60–85%, red ≥ 85%) with a gradient progress bar that uses the same 3-zone color scheme
+  - **Asymmetric bottom bento** (`grid-cols-3`, 2+1 split):
+    - Left (col-span-2): per-department breakdown — `rounded-2xl` card with header bar, `divide-y` rows, group hover with primary color transition on department name; each row has a color-coded `%` badge (blue/amber/orange/red) and a gradient progress bar using `barGradient` chosen by utilisation tier
+    - Right (col-span-1): pipeline mini-tiles (Одобрени/Исплатени/Затворени) — small gradient cards (`amber`, `blue-indigo`, `emerald`) with staggered shimmer via inline `animation` style
+  - **Empty state**: dashed-border card with emoji, description, matches applicant dashboard style
+  - Removed the old `SummaryCard` component (replaced by inline gradient cards)
+
+**Files changed:**
+- `src/app/(dashboard)/budget/page.tsx` (rewritten — premium bento layout)
+
+---
+
 ### Task: Phase 7 — Hardening & Launch (RLS Audit, Session Expiry, E2E Testing)
 
 **Timestamp:** 2026-05-17
@@ -45,6 +198,33 @@
 - `.gitignore` (modified — added Playwright output dirs)
 - `docs/security/rls-audit-phase7.md` (created)
 - `ROADMAP.md` (modified — Phase 7 🔄 in progress, 3 items checked)
+
+---
+
+## 2026-05-17
+
+### Task: Premium Bento Grid — Applicant Dashboard UI Upgrade
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> "Go all out—make it look like a high-end SaaS product with gradient stat cards, subtle shimmers, the animated pulse on the unread badge, and a proper asymmetric layout."
+
+**Implementation:**
+- Added `@keyframes shimmer` to `src/app/globals.css` — translateX(-100%) → translateX(100%) with skewX(-12deg) for a diagonal light-sweep effect
+- Rewrote `src/app/(dashboard)/applicant/page.tsx` JSX (all data fetching and routing preserved):
+  - **Hero header card**: full-width dark-gradient tile (`slate-900 → slate-800`) with shimmer sweep, decorative translucent circles, and a white "Нова апликација" CTA button with scale hover
+  - **Asymmetric bento stat grid** (`grid-cols-3`, 2+1 split):
+    - Large tile (col-span-2): blue-indigo gradient, 5xl font for the total-requested MKD figure, shimmer at 3 s
+    - Right column — two stacked cards:
+      - Approved: emerald gradient, 2xl number, shimmer offset by 1 s delay
+      - In-review: violet-purple gradient, shimmer offset by 0.5 s delay, animated `ping` pulse dot beside the count when > 0
+  - **Application list tile**: `rounded-2xl` card with `bg-muted/20` header bar, `divide-y` rows, left 4 px border accent per status (`STATUS_ACCENT` map, 12 statuses), group hover with conference name colour transition
+  - **Empty state**: dashed-border card with emoji, subtitle, prominent CTA button
+- All shadcn-style utilities used (no new packages)
+
+**Files changed:**
+- `src/app/globals.css` (modified — shimmer @keyframes added)
+- `src/app/(dashboard)/applicant/page.tsx` (rewritten — premium bento layout)
 
 ---
 

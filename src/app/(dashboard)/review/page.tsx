@@ -62,7 +62,7 @@ export default async function ReviewQueuePage() {
   );
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8 w-full">
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Преглед на апликации</h1>
         <p className="text-sm text-muted-foreground mt-1">

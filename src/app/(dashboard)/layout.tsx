@@ -37,7 +37,7 @@ export default async function DashboardLayout({
     : user.email ?? "Корисник";
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="w-full min-h-screen flex bg-background">
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card flex flex-col">
         <div className="p-6 border-b border-border">
@@ -89,7 +89,7 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto w-full">{children}</main>
 
       {/* NFR-01: 30-minute inactivity auto-logout */}
       <InactivityGuard />

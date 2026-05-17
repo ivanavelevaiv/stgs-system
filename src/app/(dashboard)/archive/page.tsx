@@ -76,7 +76,7 @@ export default async function ArchivePage({
     : (applications ?? []);
 
   return (
-    <div className="p-8 max-w-5xl space-y-6">
+    <div className="p-8 w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Архива</h1>
         <p className="text-sm text-muted-foreground mt-1">

@@ -18,22 +18,25 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const DIRECTION_META: Record<
   SettlementDirection,
-  { label: string; description: string; color: string }
+  { label: string; description: string; cardCls: string; diffCls: string }
 > = {
   refund_to_applicant: {
     label: "Доплата кон апликантот",
     description: "Трошоците го надминуваат авансот — ФИНКИ должи разлика",
-    color: "text-green-700 bg-green-50 border-green-200",
+    cardCls: "bg-emerald-50 border-emerald-200 text-emerald-800",
+    diffCls: "text-emerald-700",
   },
   return_to_finki: {
     label: "Апликантот враќа средства",
     description: "Трошоците се помали од авансот — апликантот враќа разлика",
-    color: "text-orange-700 bg-orange-50 border-orange-200",
+    cardCls: "bg-orange-50 border-orange-200 text-orange-800",
+    diffCls: "text-orange-700",
   },
   balanced: {
     label: "Порамнето",
     description: "Трошоците го покриваат авансот — без дополнителна исплата",
-    color: "text-blue-700 bg-blue-50 border-blue-200",
+    cardCls: "bg-blue-50 border-blue-200 text-blue-800",
+    diffCls: "text-blue-700",
   },
 };
 
@@ -221,109 +224,134 @@ export default function SettlementView({
   }
 
   const dirMeta = DIRECTION_META[direction];
+  const unresolvedCount = duplicates.filter((r) => !r.is_manually_verified).length;
 
   return (
     <div className="space-y-6">
-      {/* ── Duplicate suspect queue ── */}
+      {/* ── Duplicate suspect banner (gradient border) ── */}
       {duplicates.length > 0 && (
-        <section className="border border-border rounded-lg bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">Потенцијални дупликати</h2>
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                hasUnresolvedDuplicates
-                  ? "bg-orange-100 text-orange-800"
-                  : "bg-green-100 text-green-800"
-              }`}
-            >
-              {duplicates.filter((r) => !r.is_manually_verified).length} нерешени
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Рецептите подолу имаат исти SHA-256 хаш со друг рецепт. Потврдете ги
-            легитимните или оставете ги за исклучување од порамнувањето.
-          </p>
-          <ul className="divide-y divide-border">
-            {duplicates.map((r) => (
-              <li
-                key={r.id}
-                className={`py-3 flex items-center gap-4 ${
-                  r.is_manually_verified ? "opacity-60" : ""
+        <div className="p-[1px] rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 shadow-lg shadow-amber-500/20">
+          <div className="bg-card rounded-[15px] p-5 space-y-4">
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg shrink-0 select-none">
+                ⚠️
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-bold text-foreground">
+                  Потенцијални дупликати
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Рецептите подолу имаат исти SHA-256 хаш со друг рецепт. Потврдете
+                  ги легитимните или оставете ги за исклучување.
+                </p>
+              </div>
+              <span
+                className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                  hasUnresolvedDuplicates
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-green-100 text-green-800"
                 }`}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{r.file_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {CATEGORY_LABELS[r.category] ?? r.category}
-                    {r.expense_date ? ` · ${r.expense_date}` : ""}
-                    {" · OCR "}
-                    {Math.round((r.ocr_confidence ?? 0) * 100)}%
-                  </p>
+                {unresolvedCount} нерешени
+              </span>
+            </div>
+
+            {/* Receipt rows */}
+            <div className="rounded-xl overflow-hidden border border-border/60 divide-y divide-border/60">
+              {duplicates.map((r) => (
+                <div
+                  key={r.id}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                    r.is_manually_verified
+                      ? "bg-emerald-50/50"
+                      : "bg-amber-50/40 hover:bg-amber-50/70"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-sm font-medium truncate ${
+                        r.is_manually_verified ? "" : "text-amber-900"
+                      }`}
+                    >
+                      {r.file_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {CATEGORY_LABELS[r.category] ?? r.category}
+                      {r.expense_date ? ` · ${r.expense_date}` : ""}
+                      {" · OCR "}
+                      {Math.round((r.ocr_confidence ?? 0) * 100)}%
+                    </p>
+                  </div>
+                  <span className="text-sm font-mono font-semibold tabular-nums shrink-0">
+                    {Number(r.amount ?? 0).toLocaleString("mk-MK")} {r.currency}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {r.is_manually_verified ? (
+                      <>
+                        <span className="text-xs font-semibold text-emerald-700">
+                          ✓ Потврден
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyReceipt(r.id, false)}
+                          className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          Откажи
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyReceipt(r.id, true)}
+                          className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 hover:scale-[1.03] active:scale-[0.97] transition-all shadow-sm"
+                        >
+                          Потврди
+                        </button>
+                        <span className="text-xs font-medium text-orange-600">
+                          Ќе се исклучи
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <span className="text-sm font-mono font-medium shrink-0">
-                  {Number(r.amount ?? 0).toLocaleString("mk-MK")} {r.currency}
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
-                  {r.is_manually_verified ? (
-                    <>
-                      <span className="text-xs text-green-700 font-medium">✓ Потврден</span>
-                      <button
-                        type="button"
-                        onClick={() => handleVerifyReceipt(r.id, false)}
-                        className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        Откажи
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleVerifyReceipt(r.id, true)}
-                        className="px-2.5 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors"
-                      >
-                        Потврди
-                      </button>
-                      <span className="text-xs text-orange-600 font-medium">
-                        Ќе се исклучи
-                      </span>
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Settlement calculator ── */}
-      <section className="border border-border rounded-lg bg-card p-5 space-y-4">
-        <h2 className="text-base font-semibold">Пресметка на порамнување</h2>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
+        <h2 className="text-base font-bold">Пресметка на порамнување</h2>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between py-2 border-b border-border">
-            <span className="text-muted-foreground">Исплатен аванс</span>
-            <span className="font-mono font-semibold">
+        {/* Ledger */}
+        <div className="rounded-xl overflow-hidden border border-border/60">
+          <div className="flex justify-between items-center px-4 py-3 bg-muted/20 border-b border-border/60">
+            <span className="text-sm text-muted-foreground">Исплатен аванс</span>
+            <span className="text-sm font-bold font-mono tabular-nums">
               {advanceAmount.toLocaleString("mk-MK")} МКД
             </span>
           </div>
 
-          <div className="flex justify-between py-1">
-            <span className="text-muted-foreground">
+          <div className="flex justify-between items-center px-4 py-3 border-b border-border/60">
+            <span className="text-sm text-muted-foreground">
               Верификувани рецепти ({included.length})
             </span>
-            <span className="font-mono">
+            <span className="text-sm font-mono tabular-nums">
               {claimedAmount.toLocaleString("mk-MK", { minimumFractionDigits: 2 })} МКД
             </span>
           </div>
 
           {excluded.length > 0 && (
-            <div className="flex justify-between py-1 text-orange-700">
-              <span>
+            <div className="flex justify-between items-center px-4 py-3 border-b border-border/60 bg-orange-50/50">
+              <span className="text-sm text-orange-700">
                 Исклучени дупликати ({excluded.length})
               </span>
-              <span className="font-mono">
-                −{excluded
+              <span className="text-sm font-mono tabular-nums text-orange-700">
+                −
+                {excluded
                   .reduce((s, r) => s + (r.amount ?? 0), 0)
                   .toLocaleString("mk-MK", { minimumFractionDigits: 2 })}{" "}
                 МКД
@@ -331,18 +359,20 @@ export default function SettlementView({
             </div>
           )}
 
-          <div className="flex justify-between py-2 border-t border-border font-semibold">
-            <span>Признаени трошоци</span>
-            <span className="font-mono">
-              {claimedAmount.toLocaleString("mk-MK", { minimumFractionDigits: 2 })} МКД
-            </span>
-          </div>
-
+          {/* Difference row — prominent */}
           <div
-            className={`flex justify-between py-2 rounded-md px-3 font-bold text-base border ${dirMeta.color}`}
+            className={`flex justify-between items-center px-4 py-4 border-t-2 border-border/80 ${
+              direction === "balanced"
+                ? "bg-blue-50/40"
+                : direction === "refund_to_applicant"
+                ? "bg-emerald-50/40"
+                : "bg-orange-50/40"
+            }`}
           >
-            <span>Разлика</span>
-            <span className="font-mono">
+            <span className={`text-base font-bold ${dirMeta.diffCls}`}>
+              Разлика
+            </span>
+            <span className={`text-lg font-extrabold font-mono tabular-nums ${dirMeta.diffCls}`}>
               {difference.toLocaleString("mk-MK", {
                 minimumFractionDigits: 2,
                 signDisplay: "always",
@@ -352,15 +382,16 @@ export default function SettlementView({
           </div>
         </div>
 
-        <div className={`rounded-lg border p-4 space-y-1 ${dirMeta.color}`}>
-          <p className="text-sm font-semibold">{dirMeta.label}</p>
-          <p className="text-xs">{dirMeta.description}</p>
+        {/* Direction summary card */}
+        <div className={`rounded-xl border p-4 ${dirMeta.cardCls}`}>
+          <p className="text-sm font-bold mb-0.5">{dirMeta.label}</p>
+          <p className="text-xs opacity-80">{dirMeta.description}</p>
         </div>
 
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">
+          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-xl">
             {error}
-          </p>
+          </div>
         )}
 
         {/* Action buttons */}
@@ -369,7 +400,7 @@ export default function SettlementView({
             type="button"
             onClick={handleConfirmSettlement}
             disabled={submitting}
-            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
@@ -384,9 +415,9 @@ export default function SettlementView({
           </button>
         ) : existingSettlement.status === "awaiting_proof" ? (
           <div className="space-y-3">
-            <div className="rounded-md bg-orange-50 border border-orange-200 px-4 py-3 text-sm text-orange-800">
+            <div className="rounded-xl bg-orange-50 border border-orange-200 px-4 py-3.5 text-sm text-orange-800">
               Порамнувањето е потврдено — апликантот треба да врати{" "}
-              <strong>
+              <strong className="font-bold">
                 {Math.abs(difference).toLocaleString("mk-MK", {
                   minimumFractionDigits: 2,
                 })}{" "}
@@ -398,7 +429,7 @@ export default function SettlementView({
               type="button"
               onClick={handleCloseApplication}
               disabled={closing}
-              className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
             >
               {closing ? (
                 <>
@@ -411,7 +442,7 @@ export default function SettlementView({
             </button>
           </div>
         ) : (
-          <div className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3.5 text-sm text-emerald-800 font-medium">
             ✓ Порамнувањето е завршено и апликацијата е затворена.
           </div>
         )}
@@ -419,19 +450,21 @@ export default function SettlementView({
         <p className="text-xs text-muted-foreground text-center">
           Потврдува: {accountantName}
         </p>
-      </section>
+      </div>
 
       {/* ── All receipts reference ── */}
-      <section className="border border-border rounded-lg bg-card p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Сите рецепти ({receipts.length})
-        </h2>
-        <ul className="divide-y divide-border">
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-border bg-muted/20">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Сите рецепти ({receipts.length})
+          </h2>
+        </div>
+        <div className="divide-y divide-border">
           {receipts.map((r) => (
-            <li key={r.id} className="py-2.5 flex items-center gap-3 text-sm">
+            <div key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 transition-colors">
               <div className="flex-1 min-w-0">
                 <p
-                  className={`font-medium truncate ${
+                  className={`text-sm font-medium truncate ${
                     r.is_duplicate_suspect && !r.is_manually_verified
                       ? "line-through text-muted-foreground"
                       : ""
@@ -439,13 +472,13 @@ export default function SettlementView({
                 >
                   {r.file_name}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {CATEGORY_LABELS[r.category] ?? r.category}
                   {r.expense_date ? ` · ${r.expense_date}` : ""}
                   {r.is_duplicate_suspect && (
                     <span
-                      className={`ml-2 ${
-                        r.is_manually_verified ? "text-green-600" : "text-orange-600"
+                      className={`ml-2 font-medium ${
+                        r.is_manually_verified ? "text-emerald-600" : "text-orange-600"
                       }`}
                     >
                       {r.is_manually_verified ? "✓ Потврден" : "⚠ Дупликат"}
@@ -453,13 +486,13 @@ export default function SettlementView({
                   )}
                 </p>
               </div>
-              <span className="font-mono text-right shrink-0">
+              <span className="font-mono text-sm font-semibold tabular-nums shrink-0">
                 {Number(r.amount ?? 0).toLocaleString("mk-MK")} {r.currency}
               </span>
-            </li>
+            </div>
           ))}
-        </ul>
-      </section>
+        </div>
+      </div>
     </div>
   );
 }

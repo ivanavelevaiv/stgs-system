@@ -47,7 +47,7 @@ export default function AdvanceActions({
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ── State A: no advance yet, application is approved/partially_approved ──
+  // ── State A: no advance yet ──
   async function handleIssueAdvance() {
     setLoading(true);
     setError(null);
@@ -133,74 +133,98 @@ export default function AdvanceActions({
     }
   }
 
-  // ── State C: payment confirmed — read-only ──
-  if (applicationStatus === "paid" && existingAdvance?.status === "paid") {
+  // ── State C: advance already paid — read-only success card ──
+  // Keyed on advance.status, not application.status, so it shows even if the
+  // application status update succeeded but the page is reloaded mid-flow.
+  if (existingAdvance?.status === "paid") {
     return (
-      <div className="border border-green-200 rounded-lg bg-green-50 p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-green-800">
-          Авансот е исплатен
-        </h2>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-          <div>
-            <dt className="text-xs text-green-700">Износ</dt>
-            <dd className="font-medium">
-              {Number(existingAdvance.amount).toLocaleString("mk-MK")} МКД
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-green-700">Референца</dt>
-            <dd className="font-medium font-mono">
-              {existingAdvance.payment_reference}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-green-700">Датум на исплата</dt>
-            <dd className="font-medium">{existingAdvance.payment_date}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-green-700">Потврдено</dt>
-            <dd className="font-medium">
-              {existingAdvance.confirmed_at
-                ? new Date(existingAdvance.confirmed_at).toLocaleString("mk-MK")
-                : "—"}
-            </dd>
-          </div>
-        </dl>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-6 text-white shadow-lg shadow-emerald-500/25">
+        <div
+          className="pointer-events-none absolute inset-0 animate-[shimmer_3.5s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+          aria-hidden="true"
+        />
+        <div className="relative z-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-100/70 mb-3">
+            Авансот е исплатен
+          </p>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <div>
+              <dt className="text-xs text-emerald-100/60 mb-0.5">Износ</dt>
+              <dd className="font-bold tabular-nums">
+                {Number(existingAdvance.amount).toLocaleString("mk-MK")} МКД
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-emerald-100/60 mb-0.5">Референца</dt>
+              <dd className="font-bold font-mono">{existingAdvance.payment_reference}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-emerald-100/60 mb-0.5">Датум на исплата</dt>
+              <dd className="font-semibold">{existingAdvance.payment_date}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-emerald-100/60 mb-0.5">Потврдено</dt>
+              <dd className="font-semibold">
+                {existingAdvance.confirmed_at
+                  ? new Date(existingAdvance.confirmed_at).toLocaleString("mk-MK")
+                  : "—"}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </div>
     );
   }
 
   // ── State A: issue the advance ──
-  if (!existingAdvance && (applicationStatus === "approved" || applicationStatus === "partially_approved")) {
+  // Also covers `for_payment` without an advance record (partial-failure recovery).
+  if (
+    !existingAdvance &&
+    (applicationStatus === "approved" ||
+      applicationStatus === "partially_approved" ||
+      applicationStatus === "for_payment")
+  ) {
     return (
-      <div className="border border-border rounded-lg bg-card p-5 space-y-4">
-        <h2 className="text-base font-semibold">Издавање на аванс</h2>
-        <div className="flex items-center justify-between py-3 px-4 bg-muted/40 rounded-md">
-          <span className="text-sm text-muted-foreground">
-            Износ за исплата
-          </span>
-          <span className="text-xl font-bold font-mono">
-            {approvedAmount.toLocaleString("mk-MK")} МКД
-          </span>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
+        <h2 className="text-base font-bold">Издавање на аванс</h2>
+
+        {/* Amount display — gradient mini card */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-5 text-white shadow-md shadow-blue-500/20">
+          <div
+            className="pointer-events-none absolute inset-0 animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            aria-hidden="true"
+          />
+          <div className="relative z-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-100/70 mb-2">
+              Износ за исплата
+            </p>
+            <p className="text-4xl font-extrabold tabular-nums leading-tight">
+              {approvedAmount.toLocaleString("mk-MK")}
+            </p>
+            <p className="text-base text-blue-100/60 mt-1">МКД</p>
+          </div>
         </div>
+
         <p className="text-xs text-muted-foreground">
           Кликнете за да издадете налог за аванс. Апликацијата ќе премине во
           статус &#8222;За исплата&#8221;.
         </p>
+
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-xl">
             {error}
-          </p>
+          </div>
         )}
+
         <button
           onClick={handleIssueAdvance}
           disabled={loading}
-          className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
-              <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin inline-block" />
-              Се издава...
+              <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              Се издава…
             </>
           ) : (
             "Издади налог за аванс"
@@ -210,13 +234,16 @@ export default function AdvanceActions({
     );
   }
 
-  // ── State B: confirm payment ──
-  if (existingAdvance && applicationStatus === "for_payment") {
+  // ── State B: advance issued, confirm payment ──
+  // Keyed on existingAdvance being non-null (State C already handled the paid case).
+  // This covers: for_payment + advance, AND approved + advance (partial-failure
+  // where the advance INSERT succeeded but the application status update did not).
+  if (existingAdvance) {
     return (
-      <div className="border border-border rounded-lg bg-card p-5 space-y-5">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Потврда на исплата</h2>
-          <span className="text-sm font-mono font-semibold">
+          <h2 className="text-base font-bold">Потврда на исплата</h2>
+          <span className="text-base font-extrabold font-mono tabular-nums text-primary">
             {Number(existingAdvance.amount).toLocaleString("mk-MK")} МКД
           </span>
         </div>
@@ -226,36 +253,38 @@ export default function AdvanceActions({
           потпишете за да го финализирате плаќањето (R-07).
         </p>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium">
-            Референтен број на налогот{" "}
-            <span className="text-destructive">*</span>
-          </label>
-          <input
-            type="text"
-            value={payRef}
-            onChange={(e) => setPayRef(e.target.value)}
-            placeholder="пр. PAY-2026-00042"
-            className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring font-mono"
-          />
-        </div>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">
+              Референтен број на налогот{" "}
+              <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              value={payRef}
+              onChange={(e) => setPayRef(e.target.value)}
+              placeholder="пр. PAY-2026-00042"
+              className="w-full px-3 py-2.5 border border-input rounded-xl text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow font-mono"
+            />
+          </div>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium">
-            Датум на исплата <span className="text-destructive">*</span>
-          </label>
-          <input
-            type="date"
-            value={payDate}
-            onChange={(e) => setPayDate(e.target.value)}
-            className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">
+              Датум на исплата <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              value={payDate}
+              onChange={(e) => setPayDate(e.target.value)}
+              className="w-full px-3 py-2.5 border border-input rounded-xl text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+            />
+          </div>
         </div>
 
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-xl">
             {error}
-          </p>
+          </div>
         )}
 
         <div className="pt-1 border-t border-border space-y-3">
@@ -266,12 +295,12 @@ export default function AdvanceActions({
           <button
             onClick={handleConfirmPayment}
             disabled={signing || !payRef.trim() || !payDate}
-            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
           >
             {signing ? (
               <>
-                <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin inline-block" />
-                Се потпишува...
+                <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                Се потпишува…
               </>
             ) : (
               "Потврди исплата и потпиши"

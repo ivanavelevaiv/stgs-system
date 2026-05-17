@@ -45,11 +45,7 @@ export default async function BudgetPage() {
     .select("status, approved_amount")
     .in("status", ["approved", "partially_approved", "for_payment", "paid", "report_submitted", "in_settlement", "closed"]);
 
-  const pipeline = {
-    approved: 0,
-    paid: 0,
-    closed: 0,
-  };
+  const pipeline = { approved: 0, paid: 0, closed: 0 };
   for (const row of pipelineRows ?? []) {
     const amt = Number(row.approved_amount ?? 0);
     if (row.status === "approved" || row.status === "partially_approved") {
@@ -70,134 +66,294 @@ export default async function BudgetPage() {
     .reduce((s, b) => s + Number(b.allocated_amount ?? 0), 0);
 
   const remaining = totalBudget - totalAllocated;
+  const utilizationPct = totalBudget > 0 ? Math.min(100, (totalAllocated / totalBudget) * 100) : 0;
+  const isOverBudget = remaining < 0;
+
+  const currentYearBudgets = (budgets ?? []).filter((b) => b.year === currentYear);
 
   return (
-    <div className="p-8 max-w-4xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Буџет — {currentYear}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Преглед на доделен и искористен буџет по оддел
-        </p>
+    <div className="p-8 w-full space-y-6">
+      {/* ── Hero header ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-950 via-blue-950 to-slate-900 p-6 text-white shadow-xl">
+        <div
+          className="pointer-events-none absolute inset-0 animate-[shimmer_4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent"
+          aria-hidden="true"
+        />
+        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/[0.04]" />
+        <div className="absolute -right-3 top-12 w-24 h-24 rounded-full bg-white/[0.04]" />
+        <div className="relative z-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-300/60 mb-1">
+            ФИНКИ — Деканат
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight">Буџет — {currentYear}</h1>
+          <p className="text-sm text-white/50 mt-1">
+            Преглед на доделен и искористен буџет по оддел
+          </p>
+        </div>
       </div>
 
-      {/* Top summary cards */}
+      {/* ── 3 gradient stat cards ── */}
       <div className="grid grid-cols-3 gap-4">
-        <SummaryCard
-          label="Вкупен буџет"
-          value={fmt(totalBudget)}
-          sub="за тековната година"
-          color="text-foreground"
-        />
-        <SummaryCard
-          label="Доделено"
-          value={fmt(totalAllocated)}
-          sub={`${totalBudget ? Math.round((totalAllocated / totalBudget) * 100) : 0}% од вкупниот`}
-          color="text-blue-700"
-        />
-        <SummaryCard
-          label="Преостанато"
-          value={fmt(remaining)}
-          sub={remaining < 0 ? "Буџетот е надминат!" : "слободни средства"}
-          color={remaining < 0 ? "text-destructive" : "text-green-700"}
-        />
+        {/* Total */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 p-5 text-white shadow-lg shadow-slate-500/20">
+          <div
+            className="pointer-events-none absolute inset-0 animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            aria-hidden="true"
+          />
+          <div className="relative z-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-300/70 mb-2">
+              Вкупен буџет
+            </p>
+            <p className="text-3xl font-extrabold leading-tight tabular-nums">
+              {fmt(totalBudget)}
+            </p>
+            <p className="text-sm text-slate-300/50 mt-1">МКД · {currentYear}</p>
+          </div>
+        </div>
+
+        {/* Allocated */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-500/25">
+          <div
+            className="pointer-events-none absolute inset-0 animate-[shimmer_3s_ease-in-out_0.8s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            aria-hidden="true"
+          />
+          <div className="relative z-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-100/70 mb-2">
+              Доделено
+            </p>
+            <p className="text-3xl font-extrabold leading-tight tabular-nums">
+              {fmt(totalAllocated)}
+            </p>
+            <p className="text-sm text-amber-100/60 mt-1">
+              МКД ·{" "}
+              {totalBudget ? Math.round((totalAllocated / totalBudget) * 100) : 0}% од вкупниот
+            </p>
+          </div>
+        </div>
+
+        {/* Remaining — color flips red when over budget */}
+        <div
+          className={`relative overflow-hidden rounded-2xl p-5 text-white shadow-lg bg-gradient-to-br ${
+            isOverBudget
+              ? "from-red-500 to-rose-600 shadow-red-500/25"
+              : "from-emerald-500 to-teal-600 shadow-emerald-500/25"
+          }`}
+        >
+          <div
+            className="pointer-events-none absolute inset-0 animate-[shimmer_3s_ease-in-out_1.6s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            aria-hidden="true"
+          />
+          <div className="relative z-10">
+            <p
+              className={`text-xs font-semibold uppercase tracking-widest mb-2 ${
+                isOverBudget ? "text-red-100/70" : "text-emerald-100/70"
+              }`}
+            >
+              Преостанато
+            </p>
+            <p className="text-3xl font-extrabold leading-tight tabular-nums">
+              {fmt(Math.abs(remaining))}
+            </p>
+            <p
+              className={`text-sm mt-1 ${
+                isOverBudget ? "text-red-100/60" : "text-emerald-100/60"
+              }`}
+            >
+              МКД · {isOverBudget ? "Буџетот е надминат!" : "слободни средства"}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Budget utilisation bar */}
+      {/* ── Overall utilisation gauge ── */}
       {totalBudget > 0 && (
-        <div className="border border-border rounded-lg bg-card p-5 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Искористеност на буџетот</span>
-            <span className="text-muted-foreground">
-              {fmt(totalAllocated)} / {fmt(totalBudget)} МКД
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                Искористеност на буџетот
+              </p>
+              <p className="text-sm text-muted-foreground tabular-nums">
+                {fmt(totalAllocated)} / {fmt(totalBudget)} МКД
+              </p>
+            </div>
+            <span
+              className={`text-4xl font-extrabold tabular-nums ${
+                utilizationPct >= 85
+                  ? "text-red-600"
+                  : utilizationPct >= 60
+                  ? "text-amber-600"
+                  : "text-blue-600"
+              }`}
+            >
+              {Math.round(utilizationPct)}%
             </span>
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-500 rounded-full transition-all"
-              style={{ width: `${Math.min(100, (totalAllocated / totalBudget) * 100)}%` }}
+              className={`h-full rounded-full bg-gradient-to-r transition-all ${
+                utilizationPct >= 85
+                  ? "from-red-500 to-rose-600"
+                  : utilizationPct >= 60
+                  ? "from-amber-400 to-orange-500"
+                  : "from-blue-500 to-indigo-500"
+              }`}
+              style={{ width: `${utilizationPct}%` }}
             />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground/60 mt-2">
+            <span>0 МКД</span>
+            <span>{fmt(totalBudget)} МКД</span>
           </div>
         </div>
       )}
 
-      {/* Pipeline breakdown */}
-      <div className="border border-border rounded-lg bg-card p-5 space-y-3">
-        <h2 className="text-base font-semibold">Апликации во тек</h2>
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 space-y-0.5">
-            <p className="text-xs text-yellow-700 font-medium uppercase tracking-wide">Одобрени</p>
-            <p className="text-lg font-bold text-yellow-800">{fmt(pipeline.approved)} МКД</p>
-          </div>
-          <div className="rounded-md bg-blue-50 border border-blue-200 p-3 space-y-0.5">
-            <p className="text-xs text-blue-700 font-medium uppercase tracking-wide">Исплатени</p>
-            <p className="text-lg font-bold text-blue-800">{fmt(pipeline.paid)} МКД</p>
-          </div>
-          <div className="rounded-md bg-green-50 border border-green-200 p-3 space-y-0.5">
-            <p className="text-xs text-green-700 font-medium uppercase tracking-wide">Затворени</p>
-            <p className="text-lg font-bold text-green-800">{fmt(pipeline.closed)} МКД</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Per-department breakdown */}
-      {(budgets ?? []).filter((b) => b.year === currentYear).length > 0 && (
-        <div className="border border-border rounded-lg bg-card p-5 space-y-4">
-          <h2 className="text-base font-semibold">По оддел — {currentYear}</h2>
-          <div className="divide-y divide-border">
-            {(budgets ?? [])
-              .filter((b) => b.year === currentYear)
-              .map((b) => {
+      {/* ── Bottom bento: departments (2 cols) + pipeline (1 col) ── */}
+      {currentYearBudgets.length > 0 ? (
+        <div className="grid grid-cols-3 gap-4">
+          {/* Per-department breakdown */}
+          <div className="col-span-2 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-border bg-muted/20">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                По оддел — {currentYear}
+              </h2>
+            </div>
+            <div className="divide-y divide-border">
+              {currentYearBudgets.map((b) => {
                 const total = Number(b.total_amount ?? 0);
                 const alloc = Number(b.allocated_amount ?? 0);
                 const pct = total > 0 ? (alloc / total) * 100 : 0;
+
+                const barGradient =
+                  pct >= 100
+                    ? "from-red-500 to-rose-600"
+                    : pct >= 85
+                    ? "from-orange-400 to-amber-500"
+                    : pct >= 60
+                    ? "from-amber-400 to-yellow-500"
+                    : "from-blue-500 to-indigo-500";
+
+                const badgeCls =
+                  pct >= 100
+                    ? "bg-red-100 text-red-700"
+                    : pct >= 85
+                    ? "bg-orange-100 text-orange-700"
+                    : pct >= 60
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-blue-100 text-blue-700";
+
                 return (
-                  <div key={b.id} className="py-3 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">
-                        {b.department ? (DEPT_LABELS[b.department] ?? b.department) : "—"}
+                  <div
+                    key={b.id}
+                    className="px-5 py-4 hover:bg-muted/30 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-sm font-semibold group-hover:text-primary transition-colors">
+                        {b.department
+                          ? (DEPT_LABELS[b.department] ?? b.department)
+                          : "—"}
                       </span>
-                      <span className="text-muted-foreground text-xs">
-                        {fmt(alloc)} / {fmt(total)} МКД ({Math.round(pct)}%)
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {fmt(alloc)} / {fmt(total)} МКД
+                        </span>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeCls}`}
+                        >
+                          {Math.round(pct)}%
+                        </span>
+                      </div>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full"
+                        className={`h-full rounded-full bg-gradient-to-r transition-all ${barGradient}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Pipeline mini-tiles */}
+          <div className="col-span-1 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-border bg-muted/20">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Апликации во тек
+              </h2>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+              <PipelineTile
+                label="Одобрени"
+                value={fmt(pipeline.approved)}
+                gradient="from-amber-400 to-yellow-500"
+                shadowCls="shadow-amber-400/20"
+                delay="0s"
+              />
+              <PipelineTile
+                label="Исплатени"
+                value={fmt(pipeline.paid)}
+                gradient="from-blue-500 to-indigo-600"
+                shadowCls="shadow-blue-500/20"
+                delay="1s"
+              />
+              <PipelineTile
+                label="Затворени"
+                value={fmt(pipeline.closed)}
+                gradient="from-emerald-500 to-green-600"
+                shadowCls="shadow-emerald-500/20"
+                delay="0.5s"
+              />
+            </div>
           </div>
         </div>
-      )}
-
-      {(budgets ?? []).filter((b) => b.year === currentYear).length === 0 && (
-        <div className="text-center py-10 border border-dashed border-border rounded-lg text-muted-foreground text-sm">
-          Нема внесен буџет за {currentYear}. Контактирајте го IT администраторот.
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-border rounded-2xl bg-card/50 text-center">
+          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4 text-2xl select-none">
+            💰
+          </div>
+          <p className="text-sm font-semibold text-foreground mb-1">
+            Нема внесен буџет за {currentYear}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Контактирајте го IT администраторот
+          </p>
         </div>
       )}
     </div>
   );
 }
 
-function SummaryCard({
+function PipelineTile({
   label,
   value,
-  sub,
-  color,
+  gradient,
+  shadowCls,
+  delay,
 }: {
   label: string;
   value: string;
-  sub: string;
-  color: string;
+  gradient: string;
+  shadowCls: string;
+  delay: string;
 }) {
   return (
-    <div className="border border-border rounded-lg bg-card p-4 space-y-1">
-      <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-      <p className="text-xs text-muted-foreground">{sub}</p>
+    <div
+      className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${gradient} ${shadowCls} shadow-lg p-4 text-white`}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        style={{ animation: `shimmer 3.5s ease-in-out ${delay} infinite` }}
+        aria-hidden="true"
+      />
+      <div className="relative z-10">
+        <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-1">
+          {label}
+        </p>
+        <p className="text-xl font-extrabold leading-tight tabular-nums">{value}</p>
+        <p className="text-xs text-white/50 mt-0.5">МКД</p>
+      </div>
     </div>
   );
 }

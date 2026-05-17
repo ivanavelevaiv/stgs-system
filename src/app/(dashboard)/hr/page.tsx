@@ -65,7 +65,7 @@ export default async function HrPage() {
     .reduce((s, a) => s + Number(a.approved_amount ?? 0), 0);
 
   return (
-    <div className="p-8 max-w-5xl space-y-6">
+    <div className="p-8 w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Човечки ресурси — одобрени патувања</h1>
         <p className="text-sm text-muted-foreground mt-1">
