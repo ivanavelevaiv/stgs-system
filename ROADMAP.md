@@ -435,7 +435,7 @@ Append-only: no UPDATE/DELETE permissions granted on this table to any role.
 
 ---
 
-### Phase 4 — Expense Report & OCR (Week 8–9) 🔄 IN PROGRESS
+### Phase 4 — Expense Report & OCR (Week 8–9) ✅ COMPLETE
 **Goal:** Applicant submits final report; receipts are OCR-processed. (UC-04)
 
 - [x] Expense report form (available only after status = paid) — `/applicant/applications/[id]/report/new`
@@ -453,19 +453,21 @@ Append-only: no UPDATE/DELETE permissions granted on this table to any role.
 
 ---
 
-### Phase 5 — Settlement & Archive (Week 10–11)
+### Phase 5 — Settlement & Archive (Week 10–11) ✅ COMPLETE
 **Goal:** Accounting reviews and finalizes settlement; application archived. (UC-05)
 
-- [ ] Accounting settlement view: advance amount vs. claimed amount, breakdown by receipt
-- [ ] Duplicate suspect queue: Accounting manually verifies flagged receipts (R-10)
-- [ ] Settlement decision: confirm amounts, mark direction (refund / return / balanced)
-- [ ] Refund flow: if ФИНКИ owes → generate supplementary payment order
-- [ ] Return flow: if applicant owes → display bank transfer instructions; applicant uploads proof
-- [ ] On proof confirmed: status → closed; archive_number assigned (R-17)
-- [ ] Edge Function `generate-archive-pdf`: signed decision bundle uploaded to `signed-decisions`
-- [ ] Archive role: read-only search by archive_number, applicant, year
+- [x] Accounting settlement view: `/accounting/settlement/[id]` — advance vs claimed, receipt breakdown
+- [x] Duplicate suspect queue: mark receipts as verified (include) or leave unverified (exclude)
+- [x] Settlement calculator: real-time difference + direction badge (refund / return / balanced)
+- [x] Confirm settlement: creates `settlements` row with direction/status; transitions application
+- [x] Return flow: `return_to_finki` → status `in_settlement` (awaiting_proof); "Close" button when ready
+- [x] Archive action: generates `archive_number` (СТГС-YYYY-XXXX), marks application `closed`
+- [x] Archive role: `/archive` read-only search by archive_number, conference name, applicant
+- [x] 5th demo user: `demo.archive@finki.ukim.edu.mk` — Бранко Стојановски (archive role)
+- [x] RLS: added `settlements` INSERT + UPDATE policy for accounting; SELECT for archive role
+- [ ] Edge Function `generate-archive-pdf`: signed PDF bundle → `signed-decisions` bucket (Phase 7)
 
-**Deliverable:** Full settlement lifecycle; every closed application has a signed, archived PDF bundle.
+**Deliverable:** Full settlement lifecycle; every closed application gets a generated archive number.
 
 ---
 

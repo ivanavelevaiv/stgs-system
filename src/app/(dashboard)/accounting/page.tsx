@@ -13,6 +13,8 @@ const ACCOUNTING_STATUSES: ApplicationStatus[] = [
   "partially_approved",
   "for_payment",
   "paid",
+  "report_submitted",
+  "in_settlement",
 ];
 
 export default async function AccountingQueuePage() {
@@ -59,6 +61,9 @@ export default async function AccountingQueuePage() {
     (a) => a.status === "for_payment"
   );
   const completed = (applications ?? []).filter((a) => a.status === "paid");
+  const settlement = (applications ?? []).filter(
+    (a) => a.status === "report_submitted" || a.status === "in_settlement"
+  );
 
   function AppTable({
     rows,
@@ -123,7 +128,11 @@ export default async function AccountingQueuePage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      href={`/accounting/${app.id}`}
+                      href={
+                        app.status === "report_submitted" || app.status === "in_settlement"
+                          ? `/accounting/settlement/${app.id}`
+                          : `/accounting/${app.id}`
+                      }
                       className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:bg-primary/90 transition-colors"
                     >
                       Обработи →
@@ -147,7 +156,7 @@ export default async function AccountingQueuePage() {
         </p>
       </div>
 
-      {pending.length === 0 && inProgress.length === 0 && completed.length === 0 && (
+      {pending.length === 0 && inProgress.length === 0 && completed.length === 0 && settlement.length === 0 && (
         <div className="border border-border rounded-lg bg-card p-12 text-center">
           <p className="text-muted-foreground text-sm">
             Нема апликации за обработка во моментов.
@@ -179,6 +188,15 @@ export default async function AccountingQueuePage() {
             Исплатено
           </h2>
           <AppTable rows={completed} />
+        </section>
+      )}
+
+      {settlement.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Порамнување
+          </h2>
+          <AppTable rows={settlement} />
         </section>
       )}
     </div>

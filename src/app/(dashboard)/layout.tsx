@@ -45,7 +45,15 @@ export default async function DashboardLayout({
 
         <nav className="flex-1 p-4 space-y-1">
           {profile?.role === "accounting" ? (
-            <NavLink href="/accounting">Аванси</NavLink>
+            <NavLink href="/accounting">Сметководство</NavLink>
+          ) : profile?.role === "archive" ? (
+            <NavLink href="/archive">Архива</NavLink>
+          ) : profile?.role === "it_admin" ? (
+            <>
+              <NavLink href="/review">Преглед</NavLink>
+              <NavLink href="/accounting">Сметководство</NavLink>
+              <NavLink href="/archive">Архива</NavLink>
+            </>
           ) : profile?.role && profile.role !== "applicant" ? (
             <NavLink href="/review">Преглед на апликации</NavLink>
           ) : (

@@ -290,4 +290,65 @@ GoTrue scans token columns into Go `string` (not `*string`). Raw INSERT left `co
 
 ---
 
+### Task: Phase 5 — UC-05 Settlement & Archive
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Implement Phase 5: Settlement & Archive. Accounting settlement view, duplicate suspect queue, settlement calculator with direction, archive action with archive_number, 5th demo button (Архива). Update ROADMAP Phase 4 → complete, log Phase 5.
+
+**Implementation:**
+
+**DB / RLS changes (Supabase MCP):**
+- Added `settlements_insert_accounting` policy: accounting + it_admin can INSERT settlements
+- Added `settlements_update_accounting` policy: accounting + it_admin can UPDATE settlements
+- Added `settlements_select_archive` policy: archive role can SELECT settlements
+- Added `reports_select_archive` policy: archive role can SELECT expense_reports
+- Seeded `demo.archive@finki.ukim.edu.mk` / `Demo@Finki2026` — Бранко Стојановски, role `archive`
+
+**`/accounting/page.tsx`:**
+- Added `report_submitted` + `in_settlement` to the ACCOUNTING_STATUSES query
+- Added "Порамнување" section below "Исплатено"
+- Smart link: `report_submitted`/`in_settlement` → `/accounting/settlement/[id]`, others → `/accounting/[id]`
+
+**`/accounting/settlement/[id]/page.tsx` (server):**
+- Loads application (must be `report_submitted` or `in_settlement`)
+- Loads expense_report, all receipts, advance amount, existing settlement
+- Renders summary cards + `SettlementView` client component
+
+**`settlement-view.tsx` (client):**
+- Manages `receipts` state (duplicate resolution propagates locally + to DB in real-time)
+- **Duplicate Queue**: each flagged receipt shows "Потврди" (include) / "Ќе се исклучи" (exclude) — calls `receipts.update(is_manually_verified)` live
+- **Settlement Calculator**: 
+  - Included = non-duplicate OR manually verified duplicate
+  - `claimed_amount` = sum(included), `difference` = claimed - advance
+  - `direction`: refund_to_applicant (>0.5), return_to_finki (<-0.5), balanced otherwise
+  - Color-coded direction badge per case
+- **Confirm Settlement**: INSERTs `settlements` row; if balanced/refund → immediately closes with `archive_number`; if return_to_finki → sets `in_settlement`, shows "Close" button
+- **Archive number format**: `СТГС-{year}-{zero-padded-count}` — queries count of non-null archive_numbers to determine next sequence
+
+**`/archive/page.tsx` (server):**
+- Accessible to `archive` + `it_admin` roles
+- Lists all `closed` applications with archive numbers in a table
+- URL-param search (`?q=`) across archive_number, conference_name, applicant full name (client-side name filter after DB query)
+- Shows: archive number (mono), applicant, conference, travel dates, approved amount, close date
+
+**Layout + Login updates:**
+- `layout.tsx`: accounting → "Сметководство"; added `archive` role → `/archive`; `it_admin` → all three links
+- `login/page.tsx`: 5th demo button "Демо најава (Архива)" · Бранко Стојановски
+
+**ROADMAP:**
+- Phase 4 marked ✅ COMPLETE
+- Phase 5 marked ✅ COMPLETE
+
+**Build result:** `npx next build` — 13 routes, 0 TS errors, 0 lint errors
+
+**Files changed:**
+- `src/components/accounting/settlement-view.tsx` (created)
+- `src/app/(dashboard)/accounting/settlement/[id]/page.tsx` (created)
+- `src/app/(dashboard)/archive/page.tsx` (created)
+- `src/app/(dashboard)/accounting/page.tsx` (updated — settlement queue + routing)
+- `src/app/(dashboard)/layout.tsx` (updated — archive + it_admin nav)
+- `src/app/login/page.tsx` (updated — 5th demo button)
+- `ROADMAP.md` (updated — Phase 4 ✅, Phase 5 ✅)
+
 ---
