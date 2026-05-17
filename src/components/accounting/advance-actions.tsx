@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createNotification } from "@/lib/notifications";
 import type { Database } from "@/types/database.types";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
@@ -20,6 +21,7 @@ interface ExistingAdvance {
 
 interface Props {
   applicationId: string;
+  applicantId: string;
   applicationStatus: ApplicationStatus;
   approvedAmount: number;
   accountantId: string;
@@ -29,6 +31,7 @@ interface Props {
 
 export default function AdvanceActions({
   applicationId,
+  applicantId,
   applicationStatus,
   approvedAmount,
   accountantId,
@@ -65,6 +68,14 @@ export default function AdvanceActions({
         .update({ status: "for_payment" })
         .eq("id", applicationId);
       if (appErr) throw appErr;
+
+      await createNotification({
+        recipientId: applicantId,
+        applicationId,
+        type: "payment_confirmed",
+        title: "Авансот е издаден",
+        body: `Налогот за аванс од ${approvedAmount.toLocaleString("mk-MK")} МКД е издаден и се наоѓа на исплата.`,
+      });
 
       router.push("/accounting");
       router.refresh();
@@ -105,6 +116,14 @@ export default function AdvanceActions({
         .update({ status: "paid" })
         .eq("id", applicationId);
       if (appErr) throw appErr;
+
+      await createNotification({
+        recipientId: applicantId,
+        applicationId,
+        type: "payment_confirmed",
+        title: "Авансот е исплатен",
+        body: `Авансот е исплатен (реф. ${payRef.trim()}). Можете да поднесете извештај по враќањето.`,
+      });
 
       router.push("/accounting");
       router.refresh();

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createNotification } from "@/lib/notifications";
 import type { Database } from "@/types/database.types";
 
 type SettlementDirection = Database["public"]["Enums"]["settlement_direction"];
@@ -50,6 +51,7 @@ export interface ReceiptRow {
 
 interface Props {
   applicationId: string;
+  applicantId: string;
   advanceAmount: number;
   initialReceipts: ReceiptRow[];
   accountantId: string;
@@ -92,6 +94,7 @@ function calcSettlement(
 
 export default function SettlementView({
   applicationId,
+  applicantId,
   advanceAmount,
   initialReceipts,
   accountantId,
@@ -152,6 +155,15 @@ export default function SettlementView({
           .update({ status: "in_settlement" })
           .eq("id", applicationId);
         if (appErr) throw appErr;
+
+        await createNotification({
+          recipientId: applicantId,
+          applicationId,
+          type: "settlement_complete",
+          title: "Потребно враќање на средства",
+          body: `Трошоците се помали од авансот. Потребно е да вратите ${Math.abs(difference).toLocaleString("mk-MK", { minimumFractionDigits: 2 })} МКД во ФИНКИ.`,
+        });
+
         router.push("/accounting");
         router.refresh();
       }
@@ -195,6 +207,14 @@ export default function SettlementView({
       .update({ status: "closed", archive_number: archiveNumber })
       .eq("id", applicationId);
     if (appErr) throw appErr;
+
+    await createNotification({
+      recipientId: applicantId,
+      applicationId,
+      type: "settlement_complete",
+      title: "Апликацијата е затворена",
+      body: `Порамнувањето е финализирано. Архивски број: ${archiveNumber}.`,
+    });
 
     router.push("/accounting");
     router.refresh();

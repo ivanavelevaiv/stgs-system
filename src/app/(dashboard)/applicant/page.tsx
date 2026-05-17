@@ -17,10 +17,28 @@ export default async function ApplicantDashboard() {
   const { data: applications, error } = await supabase
     .from("applications")
     .select(
-      "id, conference_name, conference_location, travel_start_date, travel_end_date, requested_amount, status, submitted_at"
+      "id, conference_name, conference_location, travel_start_date, travel_end_date, requested_amount, approved_amount, status, submitted_at"
     )
     .eq("applicant_id", user.id)
     .order("created_at", { ascending: false });
+
+  // Budget widget stats
+  const totalRequested = (applications ?? []).reduce(
+    (s, a) => s + Number(a.requested_amount ?? 0),
+    0
+  );
+  const totalApproved = (applications ?? [])
+    .filter((a) => a.approved_amount != null)
+    .reduce((s, a) => s + Number(a.approved_amount ?? 0), 0);
+  const activeCounts = {
+    submitted: (applications ?? []).filter((a) =>
+      ["submitted", "under_council_review", "under_deanery_review"].includes(a.status)
+    ).length,
+    approved: (applications ?? []).filter((a) =>
+      ["approved", "partially_approved", "for_payment", "paid"].includes(a.status)
+    ).length,
+    closed: (applications ?? []).filter((a) => a.status === "closed").length,
+  };
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -38,6 +56,27 @@ export default async function ApplicantDashboard() {
           + Нова апликација
         </Link>
       </div>
+
+      {/* Budget widget */}
+      {(applications ?? []).length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="border border-border rounded-lg bg-card p-4 space-y-0.5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Барано вкупно</p>
+            <p className="text-xl font-bold">{fmt(totalRequested)} МКД</p>
+            <p className="text-xs text-muted-foreground">{(applications ?? []).length} апликации</p>
+          </div>
+          <div className="border border-border rounded-lg bg-card p-4 space-y-0.5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Одобрено</p>
+            <p className="text-xl font-bold text-green-700">{fmt(totalApproved)} МКД</p>
+            <p className="text-xs text-muted-foreground">{activeCounts.approved} активни</p>
+          </div>
+          <div className="border border-border rounded-lg bg-card p-4 space-y-0.5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Во разгледување</p>
+            <p className="text-xl font-bold text-blue-700">{activeCounts.submitted}</p>
+            <p className="text-xs text-muted-foreground">{activeCounts.closed} затворени</p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-md text-sm mb-6">
@@ -118,4 +157,8 @@ function formatDate(dateStr: string) {
 
 function formatAmount(amount: number) {
   return new Intl.NumberFormat("mk-MK").format(amount);
+}
+
+function fmt(n: number) {
+  return new Intl.NumberFormat("mk-MK").format(Math.round(n));
 }

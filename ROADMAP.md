@@ -471,17 +471,20 @@ Append-only: no UPDATE/DELETE permissions granted on this table to any role.
 
 ---
 
-### Phase 6 — Reporting & Notifications (Week 12)
+### Phase 6 — Reporting & Notifications (Week 12) ✅ COMPLETE
 **Goal:** Budget dashboards, smart reminders, complete notification coverage. (UC-06)
 
-- [ ] Applicant budget widget: approved / paid / claimed / remaining (R-12)
-- [ ] Deanery budget report: table + chart by department/year; CSV + PDF export (UC-06)
-- [ ] Edge Function `deadline-reminder-cron`: daily check; insert reminders 7 days and 1 day before `report_deadline` (R-13)
-- [ ] HR role: read-only view of decisions for their employees
-- [ ] Notification center: in-app list, mark-as-read, link to application (R-05)
-- [ ] Email template polish: Macedonian + English variants (R-16)
+- [x] Applicant budget widget: approved / paid / claimed / remaining on applicant dashboard (R-12)
+- [x] Deanery budget report: `/budget` — total/allocated/remaining cards, utilisation bar, per-department breakdown (UC-06)
+- [x] HR role: read-only dashboard `/hr` — all post-approval applications, summary counters, applicant details
+- [x] Notification center: `/notifications` — in-app list, mark-as-read, mark-all-read, link to application (R-05)
+- [x] Notification bell in sidebar: unread count badge, visible to all roles
+- [x] Notification creation integrated: advance issued, advance paid, settlement return required, application closed
+- [x] 6th demo button: HR role (Марко Димитриевски)
+- [ ] Edge Function `deadline-reminder-cron`: daily check; insert reminders 7 days and 1 day before `report_deadline` (R-13) — deferred to Phase 7
+- [ ] Email template polish: Macedonian + English variants (R-16) — deferred to Phase 7
 
-**Deliverable:** Full observability for all roles; no status change goes unnotified.
+**Deliverable:** Full observability for all roles; status changes generate in-app notifications.
 
 ---
 

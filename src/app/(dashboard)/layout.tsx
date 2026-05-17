@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import LogoutButton from "@/components/logout-button";
+import NotificationBell from "@/components/layout/notification-bell";
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +23,13 @@ export default async function DashboardLayout({
     .select("first_name, last_name, role, department, title")
     .eq("id", user.id)
     .single();
+
+  // Unread notification count
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("recipient_id", user.id)
+    .eq("is_read", false);
 
   const displayName = profile
     ? `${profile.first_name} ${profile.last_name}`
@@ -48,11 +56,20 @@ export default async function DashboardLayout({
             <NavLink href="/accounting">Сметководство</NavLink>
           ) : profile?.role === "archive" ? (
             <NavLink href="/archive">Архива</NavLink>
+          ) : profile?.role === "hr" ? (
+            <NavLink href="/hr">Човечки ресурси</NavLink>
+          ) : profile?.role === "deanery" ? (
+            <>
+              <NavLink href="/review">Преглед на апликации</NavLink>
+              <NavLink href="/budget">Буџет</NavLink>
+            </>
           ) : profile?.role === "it_admin" ? (
             <>
               <NavLink href="/review">Преглед</NavLink>
               <NavLink href="/accounting">Сметководство</NavLink>
               <NavLink href="/archive">Архива</NavLink>
+              <NavLink href="/budget">Буџет</NavLink>
+              <NavLink href="/hr">ЧР</NavLink>
             </>
           ) : profile?.role && profile.role !== "applicant" ? (
             <NavLink href="/review">Преглед на апликации</NavLink>
@@ -62,6 +79,7 @@ export default async function DashboardLayout({
               <NavLink href="/applicant/applications/new">Нова апликација</NavLink>
             </>
           )}
+          <NotificationBell unreadCount={unreadCount ?? 0} />
         </nav>
 
         <div className="p-4 border-t border-border">

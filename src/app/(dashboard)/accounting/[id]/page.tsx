@@ -150,6 +150,7 @@ export default async function AccountingApplicationPage({
       {/* Advance actions — main accounting widget */}
       <AdvanceActions
         applicationId={application.id}
+        applicantId={application.applicant_id}
         applicationStatus={appStatus}
         approvedAmount={approvedAmount}
         accountantId={user.id}

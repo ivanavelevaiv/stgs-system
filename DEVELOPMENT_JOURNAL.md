@@ -4,6 +4,47 @@
 
 ## 2026-05-17
 
+### Task: Phase 6 — Reporting & Notifications (UC-06)
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Build the Deanery Budget Report Dashboard, Applicant Budget Widget, Notification Center, HR View, 6th demo button, and update ROADMAP + JOURNAL.
+
+**Implementation:**
+- Seeded `demo.hr@finki.ukim.edu.mk` with role `hr` (Марко Димитриевски, Раководител на ЧР)
+- Created `src/lib/notifications.ts` — `createNotification()` helper typed to DB `notification_type` enum
+- Created `src/app/(dashboard)/budget/page.tsx` — Deanery budget dashboard with 3 summary cards (total/allocated/remaining), utilisation bar, pipeline breakdown (approved/paid/closed), per-department bars; gated to `deanery` + `it_admin`
+- Created `src/app/(dashboard)/hr/page.tsx` — HR read-only view; all post-approval applications in a summary table with applicant name, department, conference, dates, approved amount, status badge + archive number; gated to `hr` + `it_admin`
+- Created `src/app/(dashboard)/notifications/page.tsx` — server-fetched notification list passed to client component
+- Created `src/components/notifications/notification-list.tsx` — client component; unread badge, mark-as-read per item, mark-all-read button
+- Created `src/components/layout/notification-bell.tsx` — sidebar link with unread count badge
+- Updated `src/app/(dashboard)/applicant/page.tsx` — budget widget (3 cards: total requested, total approved, in-review count) shown when user has applications
+- Updated `src/app/(dashboard)/layout.tsx` — added HR nav link for `hr` role, budget link for `deanery`, both links for `it_admin`, notification bell for all roles with server-fetched unread count
+- Updated `src/app/login/page.tsx` — 6th demo button "Демо најава (Човечки ресурси)" → Марко Димитриевски → `/hr`
+- Integrated `createNotification()` into `advance-actions.tsx` (advance issued, payment confirmed) and `settlement-view.tsx` (return required, application closed)
+- Fixed TS errors: `null` index in budget page (added `b.department ?` guard), `Set<string>` spread in hr page (changed to `Array.from`), `notification_type` enum mismatch (mapped to valid DB values)
+- 0 TypeScript errors on final check
+
+**Files changed:**
+- `src/lib/notifications.ts` (created)
+- `src/app/(dashboard)/budget/page.tsx` (created)
+- `src/app/(dashboard)/hr/page.tsx` (created)
+- `src/app/(dashboard)/notifications/page.tsx` (created)
+- `src/components/notifications/notification-list.tsx` (created)
+- `src/components/layout/notification-bell.tsx` (created)
+- `src/app/(dashboard)/applicant/page.tsx` (modified)
+- `src/app/(dashboard)/layout.tsx` (modified)
+- `src/app/login/page.tsx` (modified)
+- `src/components/accounting/advance-actions.tsx` (modified)
+- `src/components/accounting/settlement-view.tsx` (modified)
+- `src/app/(dashboard)/accounting/[id]/page.tsx` (modified)
+- `src/app/(dashboard)/accounting/settlement/[id]/page.tsx` (modified)
+- `ROADMAP.md` (modified — Phase 6 marked ✅ COMPLETE)
+
+---
+
+## 2026-05-17
+
 ### Task: Connect project to Supabase MCP server
 
 **Timestamp:** 2026-05-17T09:xx UTC

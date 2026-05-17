@@ -147,6 +147,7 @@ export default async function SettlementPage({
       {/* Settlement view (client component) */}
       <SettlementView
         applicationId={application.id}
+        applicantId={application.applicant_id}
         advanceAmount={advanceAmount}
         initialReceipts={receipts ?? []}
         accountantId={user.id}
