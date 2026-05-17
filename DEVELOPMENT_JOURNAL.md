@@ -206,3 +206,45 @@ GoTrue scans token columns into Go `string` (not `*string`). Raw INSERT left `co
 - `DEVELOPMENT_JOURNAL.md` (updated)
 
 ---
+
+### Task: Fix Vercel build error — unescaped entity in advance-actions.tsx
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Fix the Vercel build error: unescaped double quote on line 169 of advance-actions.tsx causing react/no-unescaped-entities lint failure.
+
+**Implementation:**
+- Root cause: closing `"` (ASCII U+0022) in Macedonian quote pair `„За исплата"` in JSX text content — ESLint `react/no-unescaped-entities` flags raw `"` in JSX
+- Fix: replaced raw double-quote with HTML numeric entity `&#8221;` (right double quotation mark) and opening with `&#8222;` — numeric entities are safe in JSX text nodes and pass the lint rule
+
+**Files changed:**
+- `src/components/accounting/advance-actions.tsx` (line 169 fixed)
+
+---
+
+### Task: Phase 3 — UC-03 Accounting Queue and Payment Confirmation
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Complete Phase 3: finish UC-03 — Accounting queue, payment reference confirmation, and 4th demo button (Сметководство).
+
+**Implementation:**
+- `src/app/(dashboard)/accounting/page.tsx` — accounting queue grouped in 3 sections: "Чека на издавање" (approved/partially_approved), "За исплата" (for_payment), "Исплатено" (paid); redirects non-accounting roles
+- `src/app/(dashboard)/accounting/[id]/page.tsx` — detail page for accountant: renders `AdvanceActions` widget at top, plus applicant info, conference details, approval decisions, and documents
+- `src/app/(dashboard)/layout.tsx` — added `accounting` role branch to sidebar nav → routes to `/accounting`
+- `src/app/login/page.tsx` — 4th demo button: Снежана Јованова (Сметководител), redirects to `/accounting`
+- Supabase: seeded `demo.accountant@finki.ukim.edu.mk` / `Demo@Finki2026` with role `accounting` — used split INSERT (auth.users) + UPSERT (profiles) to work around trigger that auto-creates a profiles row on user insert
+
+**4th demo credentials:**
+- Сметководство: `demo.accountant@finki.ukim.edu.mk` / `Demo@Finki2026`
+
+**Build result:** `npx next build` — 9 routes, 0 errors, 0 TS errors
+
+**Files changed:**
+- `src/app/(dashboard)/accounting/page.tsx` (created)
+- `src/app/(dashboard)/accounting/[id]/page.tsx` (created)
+- `src/app/(dashboard)/layout.tsx` (updated)
+- `src/app/login/page.tsx` (updated)
+- `src/components/accounting/advance-actions.tsx` (updated)
+
+---
