@@ -168,7 +168,7 @@ export default function LoginPage() {
               <span className="text-[8px] font-black text-white tracking-tight">ГН</span>
             </div>
             <span className="text-xs font-semibold text-white/75 tracking-wide">
-              ФИНКИ — Универзитет „Св. Кирил и Методиј"
+              ФИНКИ — Универзитет &#8222;Св. Кирил и Методиј&#8220;
             </span>
           </div>
 
@@ -214,7 +214,7 @@ export default function LoginPage() {
             Факултет за компјутерски науки и инженерство
           </p>
           <p className="text-xs text-white/28">
-            Универзитет „Св. Кирил и Методиј" — Скопје
+            Универзитет &#8222;Св. Кирил и Методиј&#8220; — Скопје
           </p>
         </div>
       </div>
