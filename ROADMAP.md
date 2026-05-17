@@ -488,13 +488,14 @@ Append-only: no UPDATE/DELETE permissions granted on this table to any role.
 
 ---
 
-### Phase 7 — Hardening & Launch (Week 13–14)
+### Phase 7 — Hardening & Launch (Week 13–14) 🔄 IN PROGRESS
 **Goal:** Production-ready, secure, and performance-validated system.
 
-- [ ] RLS audit: verify every table policy; no role can read/write beyond their scope (NFR-01, NFR-02)
-- [ ] Session expiry: enforce 30-minute inactivity timeout (NFR-01)
+- [x] RLS audit: full `pg_policies` review; 6 issues found and fixed (NFR-01, NFR-02) — see `docs/security/rls-audit-phase7.md`
+- [x] Session expiry: Next.js middleware (session refresh + auth guard) + `InactivityGuard` client component auto-logs out after 30 min inactivity (NFR-01)
+- [x] E2E test setup: Playwright initialized; UC-01 Application Submission happy path test written (`tests/e2e/uc01-application-submit.spec.ts`)
 - [ ] GDPR / LZDP compliance check: data minimization, right-to-erasure plan
-- [ ] End-to-end test suite: Playwright covering all 6 use cases
+- [ ] End-to-end tests for remaining use cases (UC-02 through UC-06)
 - [ ] Performance: application list page < 2s under 50 concurrent users
 - [ ] Uptime target: 99.0% in ФИНКИ working hours (NFR-03)
 - [ ] 10-minute onboarding test with a real applicant (NFR-04)

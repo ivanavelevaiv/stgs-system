@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import LogoutButton from "@/components/logout-button";
 import NotificationBell from "@/components/layout/notification-bell";
+import InactivityGuard from "@/components/layout/inactivity-guard";
 
 export default async function DashboardLayout({
   children,
@@ -89,6 +90,9 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">{children}</main>
+
+      {/* NFR-01: 30-minute inactivity auto-logout */}
+      <InactivityGuard />
     </div>
   );
 }

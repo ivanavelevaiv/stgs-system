@@ -4,6 +4,52 @@
 
 ## 2026-05-17
 
+### Task: Phase 7 — Hardening & Launch (RLS Audit, Session Expiry, E2E Testing)
+
+**Timestamp:** 2026-05-17
+**Prompt:**
+> Perform an RLS Audit, implement 30-minute session expiry, initialize Playwright with a UC-01 E2E test, and update ROADMAP + JOURNAL.
+
+**Implementation:**
+
+**RLS Audit (6 issues fixed via Supabase MCP execute_sql):**
+- `notifications_insert_any_auth` (WITH CHECK true → staff-only): any authenticated user could inject notifications for arbitrary recipients. New policy `notifications_insert_staff` restricts INSERT to `accounting`, `scientific_council`, `deanery`, `it_admin`.
+- `advances_write_accounting` (ALL → INSERT+UPDATE): ALL includes DELETE, which accounting should never do. Replaced with separate INSERT and UPDATE policies.
+- `settlements_write_accounting` (ALL) + `settlements_update_accounting` (duplicate UPDATE): consolidated into `settlements_insert_accounting` + `settlements_update_accounting` (no DELETE).
+- `budgets_select_all` (USING true → role-restricted): applicants and hr could query budget tables via REST API. Restricted to `deanery`, `accounting`, `it_admin`.
+- 4 SECURITY DEFINER trigger functions callable via RPC by anon/authenticated: `REVOKE EXECUTE` applied to `handle_new_user`, `handle_approval_inserted`, `log_application_status_change`, `auto_create_settlement`. These are trigger-only functions.
+- `handle_updated_at` mutable search_path: `ALTER FUNCTION … SET search_path = public` applied.
+- `audit_log` append-only: confirmed via `pg_policies` query — no INSERT/UPDATE/DELETE policies exist for authenticated role. Writes only via SECURITY DEFINER triggers.
+- Full audit report saved to `docs/security/rls-audit-phase7.md`.
+
+**Session Expiry (NFR-01):**
+- Created `src/middleware.ts`: standard Supabase SSR middleware that refreshes the JWT on every request and redirects unauthenticated users to `/login`. Uses `getUser()` (validates with Supabase server) rather than `getSession()` (trust-only).
+- Created `src/components/layout/inactivity-guard.tsx`: client component mounted in dashboard layout. Listens to `mousemove`, `mousedown`, `keydown`, `touchstart`, `scroll`, `click` events. Resets a 30-minute timer on each event. On timeout, calls `supabase.auth.signOut()` and redirects to `/login`.
+- Added `<InactivityGuard />` to `src/app/(dashboard)/layout.tsx`.
+
+**E2E Testing (Playwright):**
+- Installed `@playwright/test` as devDependency.
+- Created `playwright.config.ts`: chromium only, sequential workers, auto-starts `next dev` for local runs, supports `PLAYWRIGHT_BASE_URL` override for CI/Vercel.
+- Created `tests/e2e/uc01-application-submit.spec.ts`: covers full UC-01 happy path — demo login, 4-step form (conference details, budget, document upload, review), submission, and assertion of the resulting entry on the applicant dashboard.
+- Added `test:e2e`, `test:e2e:ui`, `test:e2e:report` scripts to `package.json`.
+- Added playwright output dirs to `.gitignore`.
+- Browser installation: run `npx playwright install chromium` before first test run.
+
+**Files changed:**
+- `src/middleware.ts` (created)
+- `src/components/layout/inactivity-guard.tsx` (created)
+- `src/app/(dashboard)/layout.tsx` (modified — added InactivityGuard import + mount)
+- `playwright.config.ts` (created)
+- `tests/e2e/uc01-application-submit.spec.ts` (created)
+- `package.json` (modified — added @playwright/test dev dep + test scripts)
+- `.gitignore` (modified — added Playwright output dirs)
+- `docs/security/rls-audit-phase7.md` (created)
+- `ROADMAP.md` (modified — Phase 7 🔄 in progress, 3 items checked)
+
+---
+
+## 2026-05-17
+
 ### Task: Phase 6 — Reporting & Notifications (UC-06)
 
 **Timestamp:** 2026-05-17
