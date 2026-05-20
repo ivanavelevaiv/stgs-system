@@ -204,7 +204,7 @@ export default function ExpenseReportForm({
       {/* Receipts section */}
       <section className="border border-border rounded-lg bg-card p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Рецепти</h2>
+          <h2 className="text-base font-semibold">Докази</h2>
           {receipts.length > 0 && (
             <span className="text-sm font-mono font-semibold">
               Вкупно: {total.toLocaleString("mk-MK", { minimumFractionDigits: 2 })} МКД

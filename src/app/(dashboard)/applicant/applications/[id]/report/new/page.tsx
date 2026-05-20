@@ -102,7 +102,7 @@ export default async function NewExpenseReportPage({
         {receipts && receipts.length > 0 && (
           <section className="border border-border rounded-lg bg-card p-5 space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Рецепти ({receipts.length})
+              Докази ({receipts.length})
             </h2>
             <ul className="divide-y divide-border">
               {receipts.map((r) => (

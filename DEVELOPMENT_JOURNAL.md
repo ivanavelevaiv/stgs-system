@@ -2,6 +2,102 @@
 
 ---
 
+## 2026-05-20
+
+### Task: Rename "Рецепти" card heading to "Докази" in expense report views
+
+**Timestamp:** 2026-05-20
+**Prompt:**
+> Locate the applicant's expense report submission component and change the card heading "Рецепти" to "Докази" to align with the refined software specification.
+
+**Implementation:**
+- Grepped for "Рецепти" across `src/` — found 3 occurrences; only 2 are card headings
+- `src/components/expense-report/expense-report-form.tsx:207` — live upload form section heading: `Рецепти` → `Докази`
+- `src/app/(dashboard)/applicant/applications/[id]/report/new/page.tsx:105` — read-only submitted-report summary heading: `Рецепти ({receipts.length})` → `Докази ({receipts.length})`
+- Left `src/components/accounting/settlement-view.tsx:245` unchanged — that occurrence is body prose about SHA-256 hashes, not a heading
+
+**Files changed:**
+- `src/components/expense-report/expense-report-form.tsx` (line 207)
+- `src/app/(dashboard)/applicant/applications/[id]/report/new/page.tsx` (line 105)
+
+---
+
+### Task: Presentation build finalization — login button, review button, budget layout
+
+**Timestamp:** 2026-05-20
+**Prompt:**
+> Execute three UI layout fixes: (1) update iKnow login button to w-full max-w-sm spec with hover:scale-[1.02] active:scale-[0.98]; (2) add justify-center to the Разгледај button in review/page.tsx; (3) remove the "ПО ОДДЕЛ — 2026" department breakdown card from the budget page and expand pipeline tiles to full width. Verify npm run build passes.
+
+**Implementation:**
+- **Login (`src/app/login/page.tsx`):** Updated iKnow button className to match exact spec — `w-full max-w-sm flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-md transition-all transform hover:scale-[1.02] active:scale-[0.98]`; removed previous `px-6 font-bold hover:scale-105 active:scale-95 duration-150` variants
+- **Review (`src/app/(dashboard)/review/page.tsx`):** Added `justify-center` to the existing `inline-flex flex-row items-center gap-2 whitespace-nowrap` chain — completes the full flex alignment spec
+- **Budget (`src/app/(dashboard)/budget/page.tsx`):** Deleted the `col-span-2` "По оддел" card (entire department breakdown block including `DEPT_LABELS` map, `currentYearBudgets.map(...)` loop, progress bars, and percentage badges); changed pipeline tile card from `col-span-1` to `col-span-3` so it fills the full row; removed now-unused `DEPT_LABELS` const to avoid TypeScript unused-variable error
+- **Build:** `npm run build` — ✓ Compiled successfully, 0 TS errors, 0 lint errors, 16 routes
+
+**Files changed:**
+- `src/app/login/page.tsx` (button className updated)
+- `src/app/(dashboard)/review/page.tsx` (justify-center added)
+- `src/app/(dashboard)/budget/page.tsx` (department section removed, DEPT_LABELS removed, pipeline expanded to col-span-3)
+
+---
+
+### Task: Fix "Разгледај" button layout in review queue
+
+**Timestamp:** 2026-05-20
+**Prompt:**
+> Inspect the Dean/Decanat dashboard component and fix the "Разгледај" button styling: ensure flex-row, items-center, whitespace-nowrap; remove width constraints forcing wrap; add gap-2; use dark navy background, white text, and scale-press feedback.
+
+**Implementation:**
+- Located the button in `src/app/(dashboard)/review/page.tsx` line 135–141
+- Root causes: (1) no `inline-flex` so flex properties had no effect; (2) text and arrow were a single fused string `"Разгледај →"` making `gap-2` inoperative; (3) `rounded-md` and `bg-primary` didn't match premium navy aesthetic
+- Split label into two `<span>` elements (`Разгледај` + `→`) so `gap-2` creates proper spacing
+- Applied: `inline-flex flex-row items-center gap-2 whitespace-nowrap` to fix stacking
+- Replaced `bg-primary text-primary-foreground rounded-md hover:bg-primary/90` with `bg-slate-900 text-white rounded-xl shadow-sm hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-150` for dark navy + scale-press premium styling
+- No width or max-width constraints existed on the `<td>` or the link itself; the wrap was caused solely by missing `whitespace-nowrap` and `inline-flex`
+
+**Files changed:**
+- `src/app/(dashboard)/review/page.tsx` (Link className + inner markup updated)
+
+---
+
+### Task: Replace iKnow SSO footer text with styled button
+
+**Timestamp:** 2026-05-20
+**Prompt:**
+> Please locate the login page component (src/app/login/page.tsx) and find the text 'Продукциска автентикација преку iKnow SSO на ФИНКИ'. Replace this text element with a prominently styled button that says 'LogIn with iKnow'. Style it using our premium Tailwind classes: a bold indigo background, white text, rounded-xl padding, and a smooth 'hover:scale-105 active:scale-95' transition. Ensure the button is perfectly centered to maintain the balance of our new split-screen layout.
+
+**Implementation:**
+- Added `id="login-form"` to the existing `<form>` element so an out-of-flow button can submit it via the HTML `form` attribute
+- Replaced the `<p className="text-center text-xs text-muted-foreground mt-6">` footer with a centered `<button type="submit" form="login-form">` inside a `flex justify-center` wrapper
+- Button styles: `bg-indigo-600 text-white font-bold rounded-xl px-6 py-3 shadow-md hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all duration-150`
+- Added a small `iK` monogram badge (`bg-white/20 rounded-sm`) as an inline icon left of the label for visual identity
+- Button inherits `disabled={anyLoading}` to match the rest of the form's loading-state logic
+
+**Files changed:**
+- `src/app/login/page.tsx` (form id added, footer `<p>` replaced with iKnow button)
+
+---
+
+### Task: Create Faculty Presentation Guide
+
+**Timestamp:** 2026-05-20
+**Prompt:**
+> Please create a beautifully formatted file named `PRESENTATION_GUIDE.md` in the root directory. This will serve as our official speaker notes and slide structure for our 3-5 minute faculty presentation. Please structure the document with the following sections: 1. Presentation Timeline & Pacing... 2. Software Live Demo Script... 3. Development Journal Summary... 4. AI Engineering Reflection...
+
+**Implementation:**
+- Read `DEVELOPMENT_JOURNAL.md` in full to extract accurate phase milestones, dates, and implementation details
+- Created `PRESENTATION_GUIDE.md` with four sections:
+  - **Section 1** — Minute-by-minute pacing table for a 3–5 minute slot with elapsed time, duration, section name, and key talking point per row
+  - **Section 2** — Step-by-step live demo script covering: demo login as Марија Петровска (Applicant), applicant dashboard overview, expense report navigation, OCR receipt drag-and-drop, SHA-256 duplicate detection trigger, duplicate warning banner resolution (R-09/R-10 compliance), and optional settlement calculator
+  - **Section 3** — Development journal summary table mapping all 10 phases (Analysis through UI Polish) with milestone description and outcome; includes workflow proof statement referencing the `**Prompt:**` field in each journal entry
+  - **Section 4** — AI Engineering Reflection covering four advantages (rapid prototyping, secure TypeScript generation, seamless testing, automated RLS auditing) and two limitations (SRS dependency, engineer role shift from authorship to supervision)
+- Tone kept professional and academic throughout; no filler language
+
+**Files changed:**
+- `PRESENTATION_GUIDE.md` (created)
+
+---
+
 ## 2026-05-17
 
 ### Task: Session Wrap-up — TypeScript Verification

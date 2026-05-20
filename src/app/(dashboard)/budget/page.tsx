@@ -3,14 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Буџет — STGS" };
 
-const DEPT_LABELS: Record<string, string> = {
-  "Компјутерски науки": "Компјутерски науки",
-  "Информациски системи": "Информациски системи",
-  "Компјутерско инженерство": "Компјутерско инженерство",
-  "Софтверско инженерство": "Софтверско инженерство",
-  "Автоматика": "Автоматика",
-  "Електроника": "Електроника",
-};
 
 export default async function BudgetPage() {
   const supabase = createClient();
@@ -208,76 +200,11 @@ export default async function BudgetPage() {
         </div>
       )}
 
-      {/* ── Bottom bento: departments (2 cols) + pipeline (1 col) ── */}
+      {/* ── Pipeline summary ── */}
       {currentYearBudgets.length > 0 ? (
         <div className="grid grid-cols-3 gap-4">
-          {/* Per-department breakdown */}
-          <div className="col-span-2 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border bg-muted/20">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                По оддел — {currentYear}
-              </h2>
-            </div>
-            <div className="divide-y divide-border">
-              {currentYearBudgets.map((b) => {
-                const total = Number(b.total_amount ?? 0);
-                const alloc = Number(b.allocated_amount ?? 0);
-                const pct = total > 0 ? (alloc / total) * 100 : 0;
-
-                const barGradient =
-                  pct >= 100
-                    ? "from-red-500 to-rose-600"
-                    : pct >= 85
-                    ? "from-orange-400 to-amber-500"
-                    : pct >= 60
-                    ? "from-amber-400 to-yellow-500"
-                    : "from-blue-500 to-indigo-500";
-
-                const badgeCls =
-                  pct >= 100
-                    ? "bg-red-100 text-red-700"
-                    : pct >= 85
-                    ? "bg-orange-100 text-orange-700"
-                    : pct >= 60
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-blue-100 text-blue-700";
-
-                return (
-                  <div
-                    key={b.id}
-                    className="px-5 py-4 hover:bg-muted/30 transition-colors group"
-                  >
-                    <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-sm font-semibold group-hover:text-primary transition-colors">
-                        {b.department
-                          ? (DEPT_LABELS[b.department] ?? b.department)
-                          : "—"}
-                      </span>
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xs text-muted-foreground tabular-nums">
-                          {fmt(alloc)} / {fmt(total)} МКД
-                        </span>
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeCls}`}
-                        >
-                          {Math.round(pct)}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r transition-all ${barGradient}`}
-                        style={{ width: `${Math.min(100, pct)}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Pipeline mini-tiles */}
-          <div className="col-span-1 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          {/* Pipeline mini-tiles — full width now that the department card is removed */}
+          <div className="col-span-3 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="px-5 py-3.5 border-b border-border bg-muted/20">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Апликации во тек

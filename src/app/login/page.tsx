@@ -241,7 +241,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 mb-8">
+          <form id="login-form" onSubmit={handleSubmit} className="space-y-4 mb-8">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-semibold">
                 Е-пошта
@@ -363,10 +363,20 @@ export default function LoginPage() {
             })}
           </div>
 
-          {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            Продукциска автентикација преку iKnow SSO на ФИНКИ
-          </p>
+          {/* iKnow SSO button */}
+          <div className="flex justify-center mt-6">
+            <button
+              type="submit"
+              form="login-form"
+              disabled={anyLoading}
+              className="w-full max-w-sm flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-md transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+            >
+              <span className="w-4 h-4 rounded-sm bg-white/20 flex items-center justify-center shrink-0 text-[9px] font-black tracking-tight">
+                iK
+              </span>
+              LogIn with iKnow
+            </button>
+          </div>
         </div>
       </div>
     </div>

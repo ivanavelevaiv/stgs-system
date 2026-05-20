@@ -134,9 +134,10 @@ export default async function ReviewQueuePage() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/review/${app.id}`}
-                        className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:bg-primary/90 transition-colors"
+                        className="inline-flex flex-row items-center justify-center gap-2 whitespace-nowrap px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold shadow-sm hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-150"
                       >
-                        Разгледај →
+                        <span>Разгледај</span>
+                        <span>→</span>
                       </Link>
                     </td>
                   </tr>
